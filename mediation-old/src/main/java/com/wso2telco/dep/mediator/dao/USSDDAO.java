@@ -48,7 +48,6 @@ public class USSDDAO {
 	 *             the exception
 	 */
 	public Integer ussdRequestEntry(String notifyURL , String consumerKey, String operatorId, String userId) throws SQLException, Exception {
-		long startTime = System.currentTimeMillis();
 		Connection con = null;
 		PreparedStatement insert_statement=null;
 		PreparedStatement select_statement =null;
@@ -102,9 +101,6 @@ public class USSDDAO {
 			DbUtils.closeAllConnections(insert_statement, con, insert_result);
 			
 		}
-		long endTime = System.currentTimeMillis();
-		long duration = (endTime - startTime);
-		log.error(this.getClass()+"----------------------------------ussdRequestEntry----------------------------------------"+duration+"*************");
 		return newId;
 	}
 
