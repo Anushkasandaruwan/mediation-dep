@@ -18,8 +18,10 @@
 package com.wso2telco.dep.mediator.dao;
 
 import com.wso2telco.core.dbutils.DbUtils;
+import com.wso2telco.core.dbutils.exception.BusinessException;
 import com.wso2telco.core.dbutils.util.DataSourceNames;
 import com.wso2telco.dep.mediator.util.DatabaseTables;
+import com.wso2telco.dep.mediator.util.ErrorType;
 import com.wso2telco.dep.operatorservice.model.OperatorSubscriptionDTO;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -29,8 +31,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class USSDDAO {
 
@@ -47,7 +48,7 @@ public class USSDDAO {
 	 *             the exception
 	 */
 	public Integer ussdRequestEntry(String notifyURL , String consumerKey, String operatorId, String userId) throws SQLException, Exception {
-
+		long startTime = System.currentTimeMillis();
 		Connection con = null;
 		PreparedStatement insert_statement=null;
 		PreparedStatement select_statement =null;
@@ -101,7 +102,9 @@ public class USSDDAO {
 			DbUtils.closeAllConnections(insert_statement, con, insert_result);
 			
 		}
-
+		long endTime = System.currentTimeMillis();
+		long duration = (endTime - startTime);
+		log.error(this.getClass()+"----------------------------------ussdRequestEntry----------------------------------------"+duration+"*************");
 		return newId;
 	}
 
@@ -423,11 +426,11 @@ public class USSDDAO {
 		
 	}	
 
-		public void updateOperatorIdBySubscriptionId(Integer subscriptionId, String operatorId)  throws SQLException, Exception {
-    		
+		public void updateOperatorIdBySubscriptionId(TreeMap<Integer,String> OperatorIdBySubscriptionId)  throws SQLException, Exception {
+
 			Connection con = DbUtils.getDbConnection(DataSourceNames.WSO2TELCO_DEP_DB);
+			con.setAutoCommit(false);
 			PreparedStatement ps = null;
-			    
 			try {
 				if (con == null) {
 					throw new Exception("Connection not found");
@@ -439,12 +442,25 @@ public class USSDDAO {
 				.append(" operatorId= ? ")
 				.append(" WHERE ")
 				.append(" ussd_request_did = ? ");
-				
-				ps = con.prepareStatement(queryString.toString());	           
-				ps.setString(1, operatorId);
-				ps.setInt(2,subscriptionId);
-	           
-				ps.executeUpdate();
+                ps = con.prepareStatement(queryString.toString());
+
+                for (Map.Entry<Integer, String> entry : OperatorIdBySubscriptionId.entrySet())
+                {
+                    if (entry.getKey() == null || entry.getKey() <= 0) {
+
+                        throw new BusinessException(ErrorType.INVALID_USSD_REQUEST_DID);
+                    }
+                    if (entry.getValue() == null || entry.getValue().trim().length() <= 0) {
+
+                        throw new BusinessException(ErrorType.INVALID_OPERATOR_ID);
+                    }
+                    ps.setString(1, entry.getValue());
+                    ps.setInt(2,entry.getKey());
+                    ps.addBatch();
+                }
+
+				ps.executeBatch();
+                ps.clearBatch();
 		
 			} catch (Exception e) {
 				throw e;

@@ -29,6 +29,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeMap;
 
 public class USSDService {
 
@@ -204,19 +205,12 @@ public class USSDService {
 		
 	}    
 		
-	public void updateOperatorIdBySubscriptionId(Integer subscriptionId, String operatorId) throws BusinessException {
+	public void updateOperatorIdBySubscriptionId(TreeMap<Integer,String> subscriptionOperatorMap) throws BusinessException {
 		
-		if (subscriptionId == null || subscriptionId <= 0) {
 
-			throw new BusinessException(ErrorType.INVALID_USSD_REQUEST_DID);
-		}
-		if (operatorId == null || operatorId.trim().length() <= 0) {
-
-			throw new BusinessException(ErrorType.INVALID_OPERATOR_ID);
-		}
 		try {
 
-			ussdDAO.updateOperatorIdBySubscriptionId(subscriptionId, operatorId);
+			ussdDAO.updateOperatorIdBySubscriptionId(subscriptionOperatorMap);
 
 		} catch (Exception e) {
 

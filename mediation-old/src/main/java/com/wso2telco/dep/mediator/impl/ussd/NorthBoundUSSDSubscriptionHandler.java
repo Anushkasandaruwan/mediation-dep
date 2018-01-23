@@ -44,10 +44,7 @@ import org.json.JSONObject;
 import org.wso2.carbon.utils.CarbonUtils;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class NorthBoundUSSDSubscriptionHandler implements USSDHandler {
 	
@@ -131,6 +128,7 @@ public class NorthBoundUSSDSubscriptionHandler implements USSDHandler {
         callbackReference.setNotifyURL(subsEndpoint);
         subscriptionGatewayRequestDTO.setCallbackReference(callbackReference);
 
+        TreeMap<Integer,String> subscriptionOperatorMap = new TreeMap<>();
         for (ShortCodes shortCodesObj :shortCodes) {
 
             if (operatorMap.containsKey(shortCodesObj.getOperatorCode())) {
@@ -138,8 +136,7 @@ public class NorthBoundUSSDSubscriptionHandler implements USSDHandler {
                 OperatorEndpoint endpoint = operatorMap.get(shortCodesObj.getOperatorCode());
 
                 shortCodesObj.setToAddress(endpoint.getEndpointref().getAddress());
-
-                ussdService.updateOperatorIdBySubscriptionId(subscriptionId,endpoint.getOperator());
+                subscriptionOperatorMap.put(subscriptionId,endpoint.getOperator());
 
                 log.info("sending endpoint found: " + endpoint.getEndpointref().getAddress() + " Request ID: " + UID.getRequestID(context));
 
@@ -153,6 +150,7 @@ public class NorthBoundUSSDSubscriptionHandler implements USSDHandler {
             }
 
         }
+        ussdService.updateOperatorIdBySubscriptionId(subscriptionOperatorMap);
 
         subscriptionGatewayRequestDTO.setShortCodes(shortCodes);
         subscriptionGatewayRequestDTO.setClientCorrelator(originalClientCorrelator + ":" + requestid);
@@ -164,7 +162,6 @@ public class NorthBoundUSSDSubscriptionHandler implements USSDHandler {
         context.setProperty("responseResourceURL", mediatorConfMap.get("hubGateway")+executor.getResourceUrl()+"/"+subscriptionId);
         context.setProperty("subscriptionID", subscriptionId);
         context.setProperty("original_clientCorrelator", originalClientCorrelator);
-
         JsonUtil.newJsonPayload(((Axis2MessageContext) context).getAxis2MessageContext(), requestStr, true, true);
 
         return true;

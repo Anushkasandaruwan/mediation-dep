@@ -45,6 +45,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 // TODO: Auto-generated Javadoc
 
@@ -122,7 +123,9 @@ public class SouthBoundMOUSSDSubscribeHandler implements USSDHandler {
                     .getAddress() + " for operator: " + endpoints.get(0).getOperator() + " to send request.");
         }
         OperatorEndpoint endpoint = endpoints.get(0);
-        ussdService.updateOperatorIdBySubscriptionId(subscriptionId, endpoint.getOperator());
+		TreeMap<Integer,String> subscriptionOperatorMap = new TreeMap<>();
+		subscriptionOperatorMap.put(subscriptionId,endpoint.getOperator());
+        ussdService.updateOperatorIdBySubscriptionId(subscriptionOperatorMap);
 
         // set information to the message context, to be used in the sequence
         HandlerUtils.setHandlerProperty(context, this.getClass().getSimpleName());
